@@ -8,11 +8,13 @@ datasource db {
 }
 
 model User {
-  id             Int       @id @default(autoincrement())
+  id             Int        @id @default(autoincrement())
   name           String
-  email          String    @unique
+  email          String     @unique
   password       String
-  role           Role      @default(EMPLOYEE)
+  currency       String // ← add this field
+  role           Role       @default(EMPLOYEE)
+  status         UserStatus @default(ACTIVE) // ← add this field
   expenses       Expense[]
   approvalsGiven Approval[] @relation("Approvals")
 }
@@ -27,7 +29,7 @@ model Expense {
   user        User          @relation(fields: [userId], references: [id])
   userId      Int
   approvals   Approval[]
-  rules       ApprovalRule[]  // ← add this to define the relation
+  rules       ApprovalRule[]
 }
 
 model Approval {
@@ -40,12 +42,12 @@ model Approval {
 }
 
 model ApprovalRule {
-  id           Int       @id @default(autoincrement())
-  expense      Expense   @relation(fields: [expenseId], references: [id])
-  expenseId    Int
-  type         RuleType
-  threshold    Float?    // for percentage rules
-  approverId   Int?      // for specific approver rule
+  id         Int      @id @default(autoincrement())
+  expense    Expense  @relation(fields: [expenseId], references: [id])
+  expenseId  Int
+  type       RuleType
+  threshold  Float? // for percentage rules
+  approverId Int? // for specific approver rule
 }
 
 enum RuleType {
@@ -58,6 +60,12 @@ enum Role {
   ADMIN
   MANAGER
   EMPLOYEE
+}
+
+// ↓ add this enum
+enum UserStatus {
+  ACTIVE
+  INACTIVE
 }
 
 enum ExpenseStatus {
