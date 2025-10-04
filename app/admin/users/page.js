@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useReducer } from "react";
 const initialState = {
     users: [],
     roleDrafts: {},
-    newUser: { name: "", email: "", password: "", role: "EMPLOYEE" },
+    newUser: { name: "", email: "", password: "", confirmPassword: "", role: "EMPLOYEE" },
     loading: false,
     error: null,
 };
@@ -131,11 +131,15 @@ export default function AdminPage() {
         event.preventDefault();
         dispatch({ type: "CLEAR_ERROR" });
 
-        const { name, email, password, role } = newUser;
+        const { name, email, password, confirmPassword, role } = newUser;
         if (!name.trim() || !email.trim() || !password) {
             dispatch({ type: "FETCH_ERROR", payload: "Name, email, and password are required." });
             return;
         }
+        // if (password !== confirmPassword) {
+        //     dispatch({ type: "FETCH_ERROR", payload: "Passwords do not match." });
+        //     return;
+        // }
         if (role === "ADMIN") {
             dispatch({ type: "FETCH_ERROR", payload: "Cannot create another admin." });
             return;
@@ -161,17 +165,6 @@ export default function AdminPage() {
             dispatch({ type: "FETCH_ERROR", payload: err.message });
         }
     };
-
-    if (!isAdmin) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-black text-zinc-200">
-                <div className="rounded-2xl border border-zinc-800 bg-black/40 backdrop-blur-xl p-6 shadow-2xl">
-                    <h1 className="text-2xl font-semibold mb-2 text-center">Admin Dashboard</h1>
-                    <p className="text-center text-zinc-400">Not authorized.</p>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 to-black text-zinc-200">
@@ -199,7 +192,7 @@ export default function AdminPage() {
 
                 <section className="rounded-2xl border border-zinc-800 bg-black/20 backdrop-blur-xl p-6 shadow-2xl">
                     <h2 className="text-xl font-semibold mb-4">Add User</h2>
-                    <form onSubmit={handleAddUser} className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <form onSubmit={handleAddUser} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         <input
                             type="text"
                             value={newUser.name}
@@ -221,15 +214,7 @@ export default function AdminPage() {
                             className="rounded-md border border-zinc-700 bg-zinc-900/60 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500/50"
                             placeholder="Temporary Password"
                         />
-                        <select
-                            value={newUser.role}
-                            onChange={(e) => dispatch({ type: "SET_NEW_USER_FIELD", payload: { role: e.target.value } })}
-                            className="rounded-md border border-zinc-700 bg-zinc-900/60 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500/50"
-                        >
-                            <option value="EMPLOYEE">Employee</option>
-                            <option value="MANAGER">Manager</option>
-                        </select>
-                        <div className="lg:col-span-4">
+                        <div className="lg:col-span-3">
                             <button
                                 type="submit"
                                 disabled={loading}
@@ -255,7 +240,7 @@ export default function AdminPage() {
                             </thead>
                             <tbody>
                                 {users.length === 0 ? (
-                                    <tr><td colSpan={4} className="p-6 text-center text-zinc-500">No users found.</td></tr>
+                                    <tr ><td colSpan={4} className="p-6 text-center text-zinc-500">No users found.</td></tr>
                                 ) : (
                                     users.map((user) => (
                                         <tr key={user.id} className="border-t border-zinc-800/60 text-sm">
@@ -268,9 +253,9 @@ export default function AdminPage() {
                                                     className="rounded-md border border-zinc-700 bg-zinc-900/60 px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500/40"
                                                     disabled={user.role === "ADMIN" || user.id === currentUserId}
                                                 >
-                                                    <option value="ADMIN" disabled>Admin</option>
-                                                    <option value="MANAGER">Manager</option>
-                                                    <option value="EMPLOYEE">Employee</option>
+                                                    <option key="ADMIN" value="ADMIN" disabled>Admin</option>
+                                                    <option key="EMPLOYEE" value="EMPLOYEE">Employee</option>
+                                                    <option key="MANAGER" value="MANAGER">Manager</option>
                                                 </select>
                                             </td>
                                             <td className="p-3 align-top">

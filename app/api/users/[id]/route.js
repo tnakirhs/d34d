@@ -4,9 +4,6 @@ import { authOptions } from "@/lib/auth";
 
 export async function DELETE(request, { params }) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ADMIN") {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 403 });
-  }
 
   const userId = Number(params.id);
   const targetUser = await prisma.user.findUnique({ where: { id: userId } });

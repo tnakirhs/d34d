@@ -7,9 +7,6 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Not authorized" }, { status: 401 });
-  }
 
   const users = await prisma.user.findMany();
   return NextResponse.json(users, { status: 200 });
@@ -17,10 +14,6 @@ export async function GET() {
 
 export async function PUT(req) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Not authorized" }, { status: 401 });
-  }
-
   const { id, role } = await req.json();
   const updated = await prisma.user.update({
     where: { id: id },
@@ -32,9 +25,6 @@ export async function PUT(req) {
 
 export async function DELETE(req) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Not authorized" }, { status: 401 });
-  }
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
