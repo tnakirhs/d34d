@@ -1,15 +1,73 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite" // change to "postgresql" if you use Neon/Supabase later
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  name           String
+  email          String    @unique
+  password       String
+  role           Role      @default(EMPLOYEE)
+  expenses       Expense[]
+  approvalsGiven Approval[] @relation("Approvals")
+}
+
+model Expense {
+  id          Int           @id @default(autoincrement())
+  amount      Float
+  currency    String
+  description String
+  date        DateTime      @default(now())
+  status      ExpenseStatus @default(PENDING)
+  user        User          @relation(fields: [userId], references: [id])
+  userId      Int
+  approvals   Approval[]
+  rules       ApprovalRule[]  // ← add this to define the relation
+}
+
+model Approval {
+  id         Int            @id @default(autoincrement())
+  approver   User           @relation("Approvals", fields: [approverId], references: [id])
+  approverId Int
+  expense    Expense        @relation(fields: [expenseId], references: [id])
+  expenseId  Int
+  status     ApprovalStatus @default(PENDING)
+}
+
+model ApprovalRule {
+  id           Int       @id @default(autoincrement())
+  expense      Expense   @relation(fields: [expenseId], references: [id])
+  expenseId    Int
+  type         RuleType
+  threshold    Float?    // for percentage rules
+  approverId   Int?      // for specific approver rule
+}
+
+enum RuleType {
+  PERCENTAGE
+  SPECIFIC_APPROVER
+  HYBRID
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
