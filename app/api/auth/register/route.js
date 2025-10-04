@@ -6,9 +6,9 @@ const prisma = new PrismaClient();
 export async function POST(req) {
     try {
         const body = await req.json();
-        const { email, password, currency } = body;
+        const { name, email, password, currency } = body;
 
-        if (!email || !password || !currency) {
+        if (!name ||!email || !password || !currency) {
             return new Response(JSON.stringify({ error: "All fields are required" }), {
                 status: 400,
             });
@@ -27,19 +27,27 @@ export async function POST(req) {
 
         // Create user with ADMIN role and ACTIVE status by default
         // Use the email prefix as the default name
-        const name = email.split("@")[0];
+
+        const userCount = await prisma.user.count();
+        const role = userCount === 0 ? "ADMIN" : "EMPLOYEE";
 
         await prisma.user.create({
             data: {
-                name,
-                email,
-                password: hashedPassword,
-                currency,
-                role: "ADMIN",
-                status: "ACTIVE", // Requires 'status' field in your User model
+            name,
+            email,
+            password: hashedPassword,
+            currency,
+            role,
+            status: "ACTIVE",
             },
         });
 
+        if (role !== "ADMIN") {
+            return new Response(
+            JSON.stringify({ message: "Employee user registered successfully." }),
+            { status: 201 }
+            );
+        }
         return new Response(JSON.stringify({ message: "Admin user registered successfully." }), {
             status: 201,
         });

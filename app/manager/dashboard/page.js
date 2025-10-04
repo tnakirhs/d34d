@@ -1,29 +1,23 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { ArrowRight, LogOut, Users, List, Settings } from "lucide-react";
+import { ArrowRight, LogOut, CheckCircle, List } from "lucide-react";
 
-export default function AdminDashboard() {
+export default function ManagerDashboard() {
   const { data: session } = useSession();
 
   const menuItems = [
     {
-      href: "/admin/users",
-      title: "Manage Users",
-      description: "View and update roles (Employee → Manager, etc.).",
-      icon: <Users className="w-8 h-8 text-purple-400" />,
+      href: "/manager/expenses/pending",
+      title: "Approve Expenses",
+      description: "Review and approve/reject employee expense submissions.",
+      icon: <CheckCircle className="w-8 h-8 text-yellow-400" />,
     },
     {
-      href: "/admin/expenses",
+      href: "/manager/expenses",
       title: "View All Expenses",
-      description: "Track every expense across employees and managers.",
+      description: "See history of approved and rejected expenses.",
       icon: <List className="w-8 h-8 text-blue-400" />,
-    },
-    {
-      href: "/admin/approval-rules",
-      title: "Approval Rules",
-      description: "Configure multi-level approval workflows.",
-      icon: <Settings className="w-8 h-8 text-green-400" />,
     },
   ];
 
@@ -32,7 +26,7 @@ export default function AdminDashboard() {
       <div className="max-w-4xl mx-auto p-8 relative">
         <header className="flex justify-between items-center mb-12">
           <div>
-            <h1 className="text-4xl font-bold text-white tracking-tight">Admin Dashboard</h1>
+            <h1 className="text-4xl font-bold text-white tracking-tight">Manager Dashboard</h1>
             <p className="mt-2 text-gray-400">Welcome, {session?.user?.name || session?.user?.email}</p>
           </div>
           <button
@@ -50,7 +44,7 @@ export default function AdminDashboard() {
               <a
                 key={item.href}
                 href={item.href}
-                className="group relative block p-6 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-purple-500/50 transition-all duration-300"
+                className="group relative block p-6 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-yellow-500/50 transition-all duration-300"
               >
                 <div className="absolute top-6 right-6 p-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
                   {item.icon}
@@ -59,7 +53,7 @@ export default function AdminDashboard() {
                   <h2 className="text-xl font-semibold text-white">{item.title}</h2>
                   <p className="mt-1 text-gray-400">{item.description}</p>
                 </div>
-                <div className="mt-4 flex items-center text-sm font-medium text-purple-400">
+                <div className="mt-4 flex items-center text-sm font-medium text-yellow-400">
                   <span>Go to page</span>
                   <ArrowRight className="w-4 h-4 ml-1 transform transition-transform duration-300 group-hover:translate-x-1" />
                 </div>

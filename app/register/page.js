@@ -19,6 +19,7 @@ const currencies = [
 ];
 
 export default function RegisterPage() {
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -30,7 +31,7 @@ export default function RegisterPage() {
         e.preventDefault();
         setError("");
 
-        if (!email || !password || !confirmPassword || !currency) {
+        if (!name || !email || !password || !confirmPassword || !currency) {
             setError("All fields are required");
             return;
         }
@@ -44,7 +45,7 @@ export default function RegisterPage() {
             const res = await fetch("/api/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password, currency }),
+                body: JSON.stringify({ name, email, password, currency }),
             });
 
             const data = await res.json();
@@ -54,7 +55,7 @@ export default function RegisterPage() {
                 return;
             }
 
-            alert("Registration successful! Wait for Admin approval.");
+            alert("Registration successful");
             router.push("/login");
         } catch (err) {
             setError("An unexpected error occurred.");
@@ -81,6 +82,23 @@ export default function RegisterPage() {
                 )}
 
                 <form onSubmit={handleRegister} className="space-y-5">
+                    <div>
+                        <label
+                            htmlFor="name"
+                            className="text-sm font-medium text-slate-700 sr-only"
+                        >
+                            Name
+                        </label>
+                        <input
+                            id="name"
+                            type="text"
+                            placeholder="Name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="w-full px-4 py-3 text-sm text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
+                            required
+                        />
+                    </div>
                     <div>
                         <label
                             htmlFor="email"

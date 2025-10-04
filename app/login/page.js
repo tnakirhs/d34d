@@ -1,15 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const err = searchParams.get("error");
+    if (err) {
+      setError(
+        err === "CredentialsSignin" ? "Invalid email or password" : "Sign in failed"
+      );
+    }
+  }, [searchParams]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -25,12 +35,23 @@ export default function LoginPage() {
     setLoading(false);
 
     if (res?.ok) {
-      if (email === "admin@example.com") router.push("/admin");
-      else if (email === "manager@example.com") router.push("/manager");
-      else if (email === "employee@example.com") router.push("/employee");
-      else router.push("/");
+      // fetch session to know the user role
+      const response = await fetch("/api/auth/session");
+      const session = await response.json();
+
+      if (session?.user?.role === "ADMIN") {
+        router.push("/admin/dashboard");
+      } else if (session?.user?.role === "MANAGER") {
+        router.push("/manager/dashboard");
+      } else {
+        router.push("/employee/dashboard");
+      }
     } else {
-      setError(res?.error || "Invalid email or password");
+      setError(
+        res?.error === "CredentialsSignin"
+          ? "Invalid email or password"
+          : res?.error || "Sign in failed"
+      );
     }
   };
 
@@ -39,7 +60,6 @@ export default function LoginPage() {
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-lg">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-slate-900">Sign in</h1>
-          <p className="mt-2 text-sm text-slate-600">Welcome back</p>
         </div>
 
         {error && (
@@ -53,10 +73,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label
-              htmlFor="email"
-              className="text-sm font-medium text-slate-700 sr-only"
-            >
+            <label htmlFor="email" className="sr-only">
               Email
             </label>
             <input
@@ -71,10 +88,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-slate-700 sr-only"
-            >
+            <label htmlFor="password" className="sr-only">
               Password
             </label>
             <input

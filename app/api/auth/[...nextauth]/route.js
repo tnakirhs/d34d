@@ -55,35 +55,22 @@ export const authOptions = {
         }),
     ],
     callbacks: {
-        async signIn({ user, account }) {
-            if (!user) return false;
-
-            // Redirect to role-specific page after successful credentials sign-in
-            if (account?.provider === "credentials") {
-                const roleRedirects = {
-                    ADMIN: "/admin",
-                    MANAGER: "/manager",
-                    EMPLOYEE: "/dashboard",
-                };
-                return roleRedirects[user.role] || "/";
-            }
-            return true;
-        },
         async jwt({ token, user }) {
             if (user) {
-                token.id = user.id;
                 token.role = user.role;
-                token.status = user.status;
+                token.id = user.id; // add this
             }
             return token;
         },
         async session({ session, token }) {
-            if (session?.user) {
-                session.user.id = token.id;
-                session.user.role = token.role;
-                session.user.status = token.status;
-            }
+            session.user.role = token.role;
+            session.user.id = token.id; // add this
             return session;
+        },
+        async redirect({ url, baseUrl }) {
+            // Redirect based on role
+            if (url.startsWith("/")) return `${baseUrl}${url}`;
+            return baseUrl;
         },
     },
     pages: {
