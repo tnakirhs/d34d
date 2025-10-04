@@ -1,36 +1,271 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Expense Manager Web App
 
-## Getting Started
+A **web-based expense management system** built with **Next.js**, **Prisma**, and **NextAuth**, allowing companies to manage expense submissions, approvals, and user roles.
 
-First, run the development server:
+---
+
+## Table of Contents
+
+* [Features](#features)
+* [Tech Stack](#tech-stack)
+* [Project Structure](#project-structure)
+* [Database Schema](#database-schema)
+* [Setup & Installation](#setup--installation)
+* [Seeding Database](#seeding-database)
+* [Running the App](#running-the-app)
+* [Usage](#usage)
+
+  * [Employee Dashboard](#employee-dashboard)
+  * [Manager Dashboard](#manager-dashboard)
+  * [Admin Dashboard](#admin-dashboard)
+* [API Routes](#api-routes)
+* [Next Steps](#next-steps)
+
+---
+
+## Features
+
+* **Employee**:
+
+  * Submit expenses with amount, currency, description, and date
+  * View their own expense history and status
+* **Manager**:
+
+  * View team expenses
+  * Approve or reject expenses
+* **Admin**:
+
+  * Manage users and roles (Admin, Manager, Employee)
+* Conditional multi-level approvals (planned)
+* Fully integrated with **Prisma DB** and **NextAuth** authentication
+
+---
+
+## Tech Stack
+
+* **Next.js 13+ (App Router)**
+* **Prisma** (SQLite for local development)
+* **NextAuth.js** (authentication)
+* **Tailwind CSS** (styling)
+* **Node.js / NPM**
+
+---
+
+## Project Structure
+
+```
+expense-manager/
+│
+├─ prisma/
+│  ├─ schema.prisma        # Prisma schema defining models
+│  └─ seed.js              # Database seeding script
+│
+├─ app/
+│  ├─ api/
+│  │  ├─ expenses/route.js # Employee expense submission & fetching
+│  │  ├─ approvals/route.js# Manager/Admin approval handling
+│  │  ├─ users/route.js    # Admin user management
+│  │  └─ auth/[...nextauth]/route.js # NextAuth API
+│  ├─ employee/page.js     # Employee dashboard
+│  ├─ manager/page.js      # Manager dashboard
+│  └─ admin/page.js        # Admin dashboard
+│
+├─ .env                    # Environment variables
+├─ package.json
+└─ README.md
+```
+
+---
+
+## Database Schema
+
+### User
+
+```prisma
+model User {
+  id             Int       @id @default(autoincrement())
+  name           String
+  email          String    @unique
+  password       String
+  role           Role      @default(EMPLOYEE)
+  expenses       Expense[]
+  approvalsGiven Approval[] @relation("Approvals")
+}
+```
+
+### Expense
+
+```prisma
+model Expense {
+  id          Int           @id @default(autoincrement())
+  amount      Float
+  currency    String
+  description String
+  date        DateTime      @default(now())
+  status      ExpenseStatus @default(PENDING)
+  user        User          @relation(fields: [userId], references: [id])
+  userId      Int
+  approvals   Approval[]
+  rules       ApprovalRule[]
+}
+```
+
+### Approval
+
+```prisma
+model Approval {
+  id         Int            @id @default(autoincrement())
+  approver   User           @relation("Approvals", fields: [approverId], references: [id])
+  approverId Int
+  expense    Expense        @relation(fields: [expenseId], references: [id])
+  expenseId  Int
+  status     ApprovalStatus @default(PENDING)
+}
+```
+
+### ApprovalRule
+
+```prisma
+model ApprovalRule {
+  id           Int       @id @default(autoincrement())
+  expense      Expense   @relation(fields: [expenseId], references: [id])
+  expenseId    Int
+  type         RuleType
+  threshold    Float?    // for percentage rules
+  approverId   Int?      // for specific approver rule
+}
+```
+
+### Enums
+
+```prisma
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RuleType {
+  PERCENTAGE
+  SPECIFIC_APPROVER
+  HYBRID
+}
+```
+
+---
+
+## Setup & Installation
+
+1. **Clone the repository**
+
+```bash
+git clone <your-repo-url>
+cd expense-manager
+```
+
+2. **Install dependencies**
+
+```bash
+npm install
+```
+
+3. **Set up environment variables** (`.env` file):
+
+```env
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=some-long-random-string
+DATABASE_URL="file:./dev.db"
+```
+
+4. **Initialize Prisma database**
+
+```bash
+npx prisma migrate dev --name init
+```
+
+---
+
+## Seeding Database
+
+To create initial users:
+
+```bash
+node prisma/seed.js
+```
+
+* Creates:
+
+  * Admin: `admin@example.com` / `admin`
+  * Manager: `manager@example.com` / `manager`
+  * Employee: `employee@example.com` / `employee`
+
+* Verify in Prisma Studio:
+
+```bash
+npx prisma studio
+```
+
+---
+
+## Running the App
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* Visit `http://localhost:3000`
+* Login as one of the seeded users
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Usage
 
-## Learn More
+### Employee Dashboard
 
-To learn more about Next.js, take a look at the following resources:
+* Submit new expenses via form
+* View list of past expenses with status (`PENDING`, `APPROVED`, `REJECTED`)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Manager Dashboard
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+* View team expenses
+* Approve or reject pending expenses
 
-## Deploy on Vercel
+### Admin Dashboard
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* View all users
+* Change roles (Admin / Manager / Employee) dynamically
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## API Routes
+
+| Route                     | Method | Description                                                |
+| ------------------------- | ------ | ---------------------------------------------------------- |
+| `/api/expenses`           | GET    | Fetch expenses (Employee sees own, Manager/Admin sees all) |
+| `/api/expenses`           | POST   | Submit new expense (Employee only)                         |
+| `/api/approvals`          | GET    | Fetch all expenses for approval (Manager/Admin)            |
+| `/api/approvals`          | POST   | Approve or reject expense (Manager/Admin)                  |
+| `/api/users`              | GET    | Fetch all users (Admin only)                               |
+| `/api/users`              | PUT    | Update user role (Admin only)                              |
+| `/api/auth/[...nextauth]` | —      | NextAuth authentication routes                             |
+
+---
+
+## Next Steps
+
+1. Implement **conditional multi-level approvals** (percentage, specific approver, hybrid)
+2. Add **role-based UI navigation**
+3. Prepare for **deployment on Vercel** with **cloud database** (Postgres / Cloudflare D1)
+4. Add **email notifications** for expense approvals
